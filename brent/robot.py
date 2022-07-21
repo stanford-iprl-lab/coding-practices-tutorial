@@ -1,4 +1,4 @@
-"""Variation/alternative to Toki's robot.py / simulator.py tutorial code.
+"""(1/2) Variation/alternative to Toki's robot.py / simulator.py tutorial code.
 
 This script should be runnable.
 
