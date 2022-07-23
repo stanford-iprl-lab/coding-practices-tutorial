@@ -1,0 +1,194 @@
+
+html, body {
+	font-family: "Roboto", sans-serif;
+	margin: 0;
+	height: 100%;
+	/* overflow: hidden; */
+}
+
+.row-split {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	height: 100%;
+}
+
+.col-split {
+	display: flex;
+	flex-direction: row;
+	overflow: hidden;
+	height: 100%;
+}
+
+#sidebar {
+	display: flex;
+	/* position: fixed; */
+	width: 465px;
+	min-width: 331px;
+	max-width: 90%;
+	/* height: 100%; */
+	background: #eee;
+	overflow: auto;
+	/* overflow-x: auto; */
+}
+
+#sidebar-redis {
+	width: 100%;
+}
+
+#sidebar-keys {
+	box-shadow: 0 2px 2px 0 rgba(0,0,0,0.1), 0 1px 5px 0 rgba(0,0,0,0.08), 0 3px 1px -2px rgba(0,0,0,0.16);
+	background: white;
+	/* overflow-y: scroll; */
+}
+
+#content {
+	background: black;
+	min-width: 10px;
+	overflow: hidden;
+}
+
+#threejs {
+	overflow: hidden;
+}
+#console {
+	height: 300px;
+}
+
+/*
+#plotly {
+	background-color: white;
+	height: 0px;
+}
+
+.ui-resizable-e {
+	width: 10px;
+	height: 100%;
+	flex: none;
+	position: relative;
+	margin-left: -10px;
+	cursor: col-resize;
+}
+
+.ui-resizable-s {
+	width: 100%;
+	height: 10px;
+	flex: none;
+	position: relative;
+	margin-top: -10px;
+	cursor: row-resize;
+}
+
+.ui-resizable-n {
+	width: 100%;
+	height: 10px;
+	flex: none;
+	position: relative;
+	margin-bottom: -10px;
+	cursor: row-resize;
+}
+*/
+
+.key-header {
+	/* display: block; */
+	display: flex;
+	justify-content: space-between;
+	font-size: 14.5px;
+	background-color: lightcoral;
+	color: white;
+	padding: 0px 15px;
+	height: 40px;
+	line-height: 40px;
+	font-weight: bold;
+}
+.key-header label {
+	overflow: hidden;
+}
+.key-header .buttons {
+	display: flex;
+}
+.key-header input {
+	border: none;
+	line-height: 40px;
+	padding: 0px 10px;
+	background-color: transparent;
+	color: white;
+	font-size: 14.5px;
+	outline: none;
+	text-transform: uppercase;
+}
+.key-header input:hover {
+	background-color: #ea454b;
+	cursor: pointer;
+}
+
+.val-body {
+	padding: 14px 11px 7px 14px;
+}
+.val-body .val {
+	font-family: "Inconsolata", monospace;
+	font-size: 14px;
+	/* width: 42px; */
+	width: 82px;
+	border: 1px solid lightgray;
+	outline: none;
+	padding: 0px 6px;
+	line-height: 24px;
+	margin: 0px 3px 7px 0px;
+}
+.val-body .val:focus {
+	border-bottom: 3px solid lightcoral;
+	margin-bottom: 5px;
+}
+.val-string {
+	display: flex;
+}
+.val-string .val {
+	flex-grow: 1;
+	/* width: 400px; */
+}
+.val-binary {
+	font-style: italic;
+	color: #aaa;
+	margin-bottom: 5px;
+}
+
+/*
+.line {
+	fill: none;
+	stroke: #ffab00;
+	stroke-width: 3;
+}
+.dot {
+	fill: steelblue;
+	stroke: white;
+}
+.dot-focus {
+	fill: orange;
+	stroke: orange;
+}
+.overlay {
+	fill: none;
+	pointer-events: all;
+}
+.tooltip {
+	position: absolute;
+	display: inline-block;
+	background-color: black;
+	color: white;
+	border-radius: 6px;
+	padding: 5px 10px;
+	z-index: 1;
+}
+
+.tooltip::after {
+	content: "";
+	position: absolute;
+	top: 100%;
+	left: 50%;
+	margin-left: -5px;
+	border-width: 5px;
+	border-style: solid;
+	border-color: black transparent transparent transparent;
+}
+*/
