@@ -14,15 +14,15 @@ function htmlForm(key, val, set, del) {
 	form += "\t<div class='key-header'>\n";
 	form += "\t\t<label title='" + key + "'>" + key + "</label>\n";
 	form += "\t\t<div class='buttons'>\n";
-	if (del) {
-		form += "\t\t\t<input type='button' value='Del' class='del' title='Delete key from Redis'>\n";
-	}
+	// if (del) {
+	// 	form += "\t\t\t<input type='button' value='Del' class='del' title='Delete key from Redis'>\n";
+	// }
 	if (val !== null) {
 		form += "\t\t\t<input type='button' value='Copy' class='copy' title='Copy value to clipboard'>\n";
 	}
-	if (set) {
-		form += "\t\t\t<input type='submit' value='Set' title='Set values in Redis: <enter>'>\n";
-	}
+	// if (set) {
+	// 	form += "\t\t\t<input type='submit' value='Set' title='Set values in Redis: <enter>'>\n";
+	// }
 	form += "\t\t</div>\n";
 	form += "\t</div>\n";
 	form += "\t<div class='val-body'>\n";
@@ -115,7 +115,7 @@ export function addForm(key, val, set, del, verbose, callback) {
 
 export function updateForm(key, val, set, del, verbose) {
 	let $form = $("form[data-key='" + key + "']");
-	if ($form.length === 0) {
+	if ($form.length === 0 && key.startsWith("franka_panda::")) {
 		addForm(key, val, set, del, verbose);
 	}
 

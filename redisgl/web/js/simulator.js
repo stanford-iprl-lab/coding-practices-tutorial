@@ -551,38 +551,38 @@ $(document).ready(function() {
 		controls = new THREE.OrbitControls(camera, renderer.domElement);
 		controls.enableKeys = false;
 		camera.updateProjectionMatrix();
-		Redis.addForm(KEY_CAMERA_TARGET, [controls.target.toArray()], true, false, false, (key, val) => {
-			controls.target.fromArray(val[0]);
-			controls.update();
-			renderer.render(scene, camera);
-		});
-		Redis.addForm(KEY_CAMERA_POS, [controls.object.position.toArray()], true, false, false, (key, val) => {
-			console.log(val[0]);
-			camera.position.fromArray(val[0]);
-			camera.updateProjectionMatrix();
-			controls.update();
-			renderer.render(scene, camera);
-		});
+		// Redis.addForm(KEY_CAMERA_TARGET, [controls.target.toArray()], true, false, false, (key, val) => {
+		// 	controls.target.fromArray(val[0]);
+		// 	controls.update();
+		// 	renderer.render(scene, camera);
+		// });
+		// Redis.addForm(KEY_CAMERA_POS, [controls.object.position.toArray()], true, false, false, (key, val) => {
+		// 	console.log(val[0]);
+		// 	camera.position.fromArray(val[0]);
+		// 	camera.updateProjectionMatrix();
+		// 	controls.update();
+		// 	renderer.render(scene, camera);
+		// });
 		controls.addEventListener("change", function() {
 			renderer.render(scene, camera);
-			Redis.updateForm(KEY_CAMERA_TARGET, [controls.target.toArray()]);
-			Redis.updateForm(KEY_CAMERA_POS, [controls.object.position.toArray()]);
+			// Redis.updateForm(KEY_CAMERA_TARGET, [controls.target.toArray()]);
+			// Redis.updateForm(KEY_CAMERA_POS, [controls.object.position.toArray()]);
 		});
 
-		Redis.addForm(KEY_TRAJ_RESET, null, true, false, false, (key, val) => {
-			console.log("Reset trajectory");
-			for (const key in trajectories) {
-				Trajectory.reset(trajectories[key]);
-			}
-			renderer.render(scene, camera);
-		});
-		Redis.addForm(KEY_AXES_VISIBLE, [[0]], true, false, false, (key, val) => {
-			if (val[0][0] === 0) {
-				console.log("Hide axes");
-			} else {
-				console.log("Show axes");
-			}
-		});
+		// Redis.addForm(KEY_TRAJ_RESET, null, true, false, false, (key, val) => {
+		// 	console.log("Reset trajectory");
+		// 	for (const key in trajectories) {
+		// 		Trajectory.reset(trajectories[key]);
+		// 	}
+		// 	renderer.render(scene, camera);
+		// });
+		// Redis.addForm(KEY_AXES_VISIBLE, [[0]], true, false, false, (key, val) => {
+		// 	if (val[0][0] === 0) {
+		// 		console.log("Hide axes");
+		// 	} else {
+		// 		console.log("Show axes");
+		// 	}
+		// });
 
 		var grid = new THREE.GridHelper(1, 10);
 		grid.rotation.x = Math.PI / 2;

@@ -45,6 +45,8 @@ def handle_get_request(request_handler, get_vars, **kwargs):
             request_path = None
     else:
         request_path = os.path.join(WEB_DIRECTORY, *path_tokens)
+    # print("PATH_TOKENS", path_tokens)
+    # print("REQUEST_PATH", request_path)
 
     # Check if file exists
     if request_path is None or not os.path.isfile(request_path):
@@ -131,6 +133,7 @@ class WebServer:
     def connect(self, http_port=8000, ws_port=8001):
         # Create RedisMonitor, HTTPServer, and WebSocketServer
         print("Starting up server...\n")
+        self.is_running = True
         # redis_monitor = RedisMonitor(host=args.redis_host, port=args.redis_port, password=args.redis_pass, db=args.redis_db,
         #                              refresh_rate=args.refresh_rate, key_filter=args.key_filter, realtime=args.realtime)
         # print("Connected to Redis database at %s:%d (db %d)" % (args.redis_host, args.redis_port, args.redis_db))
@@ -178,14 +181,17 @@ class WebServer:
     def on_connect(self, callback_fn):
         self._callback_fns["WebServer.on_connect"] = callback_fn
 
-    def on_ready(self, callback_fn):
-        self._callback_fns["WebServer.on_ready"] = callback_fn
+    def on_ready(self, callback_fn, args=None):
+        if args is not None:
+            self._callback_fns["WebServer.on_ready"] = lambda: callback_fn(*args)
+        else:
+            self._callback_fns["WebServer.on_ready"] = callback_fn
 
     def on_update(self, key, callback_fn):
         self._callback_fns[key] = callback_fn
 
     def wait(self):
-        while True:
+        while self.is_running:
             request = self._ui_requests.get()
             command = request[0]
             if command not in self._callback_fns:
@@ -198,15 +204,18 @@ class WebServer:
                 self._callback_fns[command]()
                 break
 
+        self.shutdown()
+
     def _initialize_client(self, ws_server, client):
         self._key_vals.clear()
         self._del_keys.clear()
         key_vals = list(iter(self._db.items()))
         client.send(ws_server.encode_message({"update": key_vals, "delete": []}))
 
-    def __del__(self):
-        print("\nShutting down server...")
-        try:
-            self.http_server_process.join()
-        except AttributeError:
-            pass
+    def shutdown(self):
+        self.is_running = False
+        self.http_server_process.terminate()
+
+    @staticmethod
+    def parse_matrix(val):
+        return np.array(map(float, val.split(" ")))

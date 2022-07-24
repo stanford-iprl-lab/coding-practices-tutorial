@@ -1,88 +1,164 @@
+#!/usr/bin/env python3
+
+"""Interactive demo code: Part 2
+
+This simulation contains a Franka Panda arm and a box. The arm starts off in its
+home configuration, and it needs to reach over and touch the box in the corner.
+
+We will use joint space control to safely position the arm above the box, and
+then use Operational space control to bring the end-effector down to touch it.
+
+This code is correctly annotated with types and passes static type checking, but
+it still doesn't run correctly. Can you find the bugs?
+
+(1) Typing
+
+    The current implementation has two member variables,
+    `self.joint_position_goal` and `self.ee_position_goal`, although only one
+    can be set at a time. This results in error-prone if/else checks to see
+    which goal is set.
+
+    Solution:
+
+    Let typing enforce this logic. We can can remove the need for individual
+    checks with one `self.goal: Union[JointPositionGoal, PoseGoal]` variable.
+    This could be implemented as a literal union or a Goal base class with two
+    subclasses.
+
+(2) Pure functions
+
+    If `self.error` doesn't get reset properly when `self.set_goal()` is called,
+    then there could be some strange behavior leftover from the previous goal.
+
+    Solution:
+
+    Side effects like this can be tricky to catch/keep track of. One extreme is
+    to make functions as pure as possible, e.g., having the user hold the
+    mutable state. An easier solution might be to consolidate side effects. In
+    this case, since prev_error is associated with the goal, it makes sense to
+    group them into one object.
+
+"""
+import argparse
 from dataclasses import dataclass
 from typing import Optional
 
 import numpy as np
 
-from simulator import Simulator
-from pose import Pose
+from simulator import RobotSimulator
+from redisgl.server import WebServer
 
 
 @dataclass
-class JointConfigurationGoal:
-    q: np.ndarray
-    start_time: float
-    threshold: float = 0.001
-    timeout: Optional[float] = None
-
-    def is_timed_out(self, time: float) -> bool:
-        if self.timeout is None:
-            return False
-        return time > self.start_time + self.timeout
-
-    def is_converged(self, q_current: np.ndarray) -> bool:
-        q_err = q_current - self.q
-        return (np.abs(q_err) < self.threshold).all()
+class PdGains:
+    kp: float
+    kd: float
 
 
-class Robot:
-    def __init__(self, simulator: Simulator, urdf: str):
-        self._simulator = simulator
-        self._uid = simulator.add_body(urdf)
+@dataclass
+class Goal:
+    goal: np.ndarray
+    error: Optional[np.ndarray] = None
 
-    @property
-    def simulator(self) -> Simulator:
-        return self._simulator
 
-    @property
-    def uid(self) -> int:
-        return self._uid
+class JointPositionGoal(Goal):
+    pass
 
-    def joint_configuration(self) -> np.ndarray:
-        return self.simulator.joint_positions(self.uid)
 
-    def compute_pose_goal(
+class EePositionGoal(Goal):
+    pass
+
+
+class RobotController:
+    def __init__(
         self,
-        pose: Pose,
-        link_id: int = -1,
-        timeout: float = 15.0,
-        threshold: float = 0.001,
-    ) -> JointConfigurationGoal:
-        return JointConfigurationGoal(
-            self.simulator.compute_inverse_kinematics(link_id, pose),
-            threshold=threshold,
-            start_time=self.simulator.time(),
-            timeout=timeout,
-        )
+        simulator: RobotSimulator,
+        pd_gains: PdGains,
+    ):
+        self.simulator = simulator
+        self.pd_gains = pd_gains
 
-    def update_control(self, goal: JointConfigurationGoal) -> None:
-        self.simulator.position_control(
-            self.uid,
-            target_positions=goal.q,
-        )
+    def update_control(self, goal: Goal) -> None:
+        """Compute PD control output and pass it to the simulator."""
+        kp = self.pd_gains.kp
+        kd = self.pd_gains.kd
 
-    def is_done(self, goal: JointConfigurationGoal) -> bool:
-        return goal.is_timed_out(self.simulator.time()) or goal.is_converged(
-            self.joint_configuration()
-        )
+        if isinstance(goal, JointPositionGoal):
+            error = goal.goal - self.simulator.get_joint_positions()
+            velocity = self.simulator.get_joint_velocities()
+            joint_accelerations = kp * error - kd * velocity
+            self.simulator.set_joint_accelerations(joint_accelerations)
+        elif isinstance(goal, EePositionGoal):
+            error = goal.goal - self.simulator.get_ee_position()
+            velocity = self.simulator.get_ee_velocity()
+            ee_acceleration = kp * error - kd * velocity
+            self.simulator.set_ee_acceleration(ee_acceleration)
+        else:
+            raise ValueError("Unrecognized goal type.")
+
+        goal.error = error
+
+    def is_done(self, goal: Goal) -> bool:
+        """Returns True if the goal is reached."""
+        if goal.error is None:
+            return False
+
+        error_norm = np.linalg.norm(goal.error)
+        return bool(error_norm < 1e-3)
+
+
+def run_controller(
+    simulator: RobotSimulator,
+    controller: RobotController,
+    goal: Goal,
+) -> None:
+    # Run our controller, recording the joint state at each step.
+    while not controller.is_done(goal):
+        # Compute torque output and step.
+        controller.update_control(goal)
+        simulator.step()
+
+    print(f"Goal error: {goal.error}")
+
+
+def main(
+    server: WebServer,
+    simulator: RobotSimulator,
+    pd_gains: PdGains,
+) -> None:
+    # Initialize controller.
+    controller = RobotController(simulator, pd_gains=pd_gains)
+
+    # 1. Position the end-effector above the box with joint space control.
+    joint_position_goal = JointPositionGoal(
+        np.array([-0.3, -0.8, -1.7, -1.7, -0.8, 1.8, -1.0])
+    )
+
+    print(f"\nMove to joint_position_goal: {joint_position_goal.goal}")
+    run_controller(simulator, controller, joint_position_goal)
+
+    # 2. Reach down and touch the box with operational space control.
+    ee_position_goal = EePositionGoal(np.array([-0.45, -0.45, 0.1]))
+
+    print(f"\nMove to ee_position_goal: {ee_position_goal.goal}")
+    run_controller(simulator, controller, ee_position_goal)
 
 
 if __name__ == "__main__":
-    simulator = Simulator()
-    robot = Robot(simulator, "franka_panda.urdf")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--kp", type=float, help="P gain.", default=49.0)
+    parser.add_argument("--kd", type=float, help="D gain.", default=14.0)
+    args = parser.parse_args()
 
-    pose = Pose(position=np.array([0.4, 0.0, 0.4]))
-    # (4) By making the user hold onto the goal and pass it into this
-    # function, we can make the Robot class completely stateless. It's now easy
-    # to see how data flows between functions by the inputs/outputs of function
-    # calls. Apart from allowing a more concise Robot implementation, it leaves
-    # less room for potential bugs. For example, `robot.update_control()` cannot
-    # be accidentally called out of order, because it needs the output of
-    # `robot.compute_pose_goal()`.
-    goal = robot.compute_pose_goal(pose)
-    while not robot.is_done(goal):
-        robot.update_control(goal)
-        # (4) There's still some hidden state being passed from the robot to the
-        # simulator (control commands). This makes sense for a module as complex
-        # as a simulator. Implementing pure functions isn't always the best
-        # approach since it could make the API too cumbersome.
-        simulator.step()
+    # Get control gains from argument parser.
+    pd_gains = PdGains(kp=args.kp, kd=args.kd)
+
+    # Initialize the web server and simulator.
+    server = WebServer()
+    simulator = RobotSimulator(server)
+    simulator.add_object("box", position=np.array([-0.45, -0.45, 0.05]))
+
+    # Run main program when web page is loaded.
+    server.on_ready(main, args=(server, simulator, pd_gains))
+    server.connect(http_port=8000, ws_port=8001)
+    server.wait()

@@ -34,15 +34,15 @@ class RobotSimulator:
 
         # Setup robot in Redis.
         # redis.sadd("webapp::resources::simulator", str(path_resources))
-        model_keys = redisgl.ModelKeys("simulator")
-        redisgl.register_model_keys(self.redis, model_keys)
+        self.model_keys = redisgl.ModelKeys("simulator")
+        redisgl.register_model_keys(self.redis, self.model_keys)
         redisgl.register_robot(
-            self.redis, model_keys, self.ab, "franka_panda::joint_positions"
+            self.redis, self.model_keys, self.ab, "franka_panda::joint_positions"
         )
         redisgl.register_trajectory(
-            self.redis, model_keys, "x_ee", "franka_panda::ee_position"
+            self.redis, self.model_keys, "x_ee", "franka_panda::ee_position"
         )
-        self.redis.set_matrix("franka_panda::joint_positions", self.ab.q)
+        self._update_redis(commit=False)
 
     def get_simulation_time(self) -> float:
         """Get the current simulation time, in seconds."""
@@ -102,7 +102,18 @@ class RobotSimulator:
     def step(self) -> None:
         """Take one physics simulation step."""
         dyn.integrate(self.ab, self.command_tau, self.TIMESTEP)
+        self._update_redis()
+        time.sleep(self.TIMESTEP)
+        self.num_iters += 1
 
+    def add_object(self, name: str, position: npt.NDArray[np.float64]) -> None:
+        graphics = redisgl.Graphics(name, redisgl.Box(np.array([0.1, 0.1, 0.1])))
+        redisgl.register_object(
+            self.redis, self.model_keys, name, graphics, key_pos=f"{name}::position",
+        )
+        self.redis.set_matrix(f"{name}::position", position)
+
+    def _update_redis(self, commit: bool = True) -> None:
         self.redis.set_matrix(
             "franka_panda::joint_positions", self.get_joint_positions()
         )
@@ -111,7 +122,5 @@ class RobotSimulator:
         )
         self.redis.set_matrix("franka_panda::ee_position", self.get_ee_position())
         self.redis.set_matrix("franka_panda::ee_velocity", self.get_ee_velocity())
-        self.redis.commit()
-        time.sleep(self.TIMESTEP)
-        self.num_iters += 1
-
+        if commit:
+            self.redis.commit()
