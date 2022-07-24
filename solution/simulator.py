@@ -6,7 +6,7 @@ improve `robot.py`!"""
 import threading
 import time
 
-import ctrlutils
+import ctrlutils  # type: ignore
 import numpy as np
 import numpy.typing as npt
 import spatialdyn as dyn  # type: ignore

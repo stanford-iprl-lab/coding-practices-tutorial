@@ -5,17 +5,17 @@ Author: Toki Migimatsu
 Created: April 2017
 """
 
-from base64 import b64encode
-from hashlib import sha1
 import socket
 import struct
 import threading
+from base64 import b64encode
+from hashlib import sha1
 
 
 class WebSocketServer:
     """
     Basic implementation for web sockets.
-    
+
     Usage:
 
     ws_server = WebSocketServer()
@@ -55,7 +55,9 @@ class WebSocketServer:
         self.clients = []
         self.lock = threading.Lock()
 
-    def serve_forever(self, client_connection_callback=None, client_message_callback=None):
+    def serve_forever(
+        self, client_connection_callback=None, client_message_callback=None
+    ):
         """
         Listen for web socket requests and spawn new thread for each client.
 
@@ -65,11 +67,16 @@ class WebSocketServer:
 
         while True:
             client, _ = self.socket.accept()
-            t = threading.Thread(target=self.handle_client, args=(client, client_connection_callback, client_message_callback))
+            t = threading.Thread(
+                target=self.handle_client,
+                args=(client, client_connection_callback, client_message_callback),
+            )
             t.daemon = True
             t.start()
 
-    def handle_client(self, client, client_connection_callback, client_message_callback):
+    def handle_client(
+        self, client, client_connection_callback, client_message_callback
+    ):
         """
         Connect to client and listen for messages until connection is closed.
         """
@@ -78,14 +85,16 @@ class WebSocketServer:
         client_key = None
         for line in client.recv(2048).splitlines():
             if line.startswith(b"Sec-WebSocket-Key"):
-                client_key = line[line.index(b":")+1:].strip()
+                client_key = line[line.index(b":") + 1 :].strip()
                 break
         if client_key is None:
             print("handle_client(): client key not found")
             client.send((WebSocketServer.STR_REJECT).encode("utf-8"))
             return
 
-        accept_key = b64encode(sha1(client_key + WebSocketServer.MAGIC).digest()).decode("utf-8")
+        accept_key = b64encode(
+            sha1(client_key + WebSocketServer.MAGIC).digest()
+        ).decode("utf-8")
         client.send((WebSocketServer.STR_HANDSHAKE % accept_key).encode("utf-8"))
 
         # Send client all keys
@@ -139,7 +148,7 @@ class WebSocketServer:
         if length < 126:
             b2 = length
             encoded_bytes += struct.pack("!B", b2)  # byte
-        elif length < (2 ** 16) - 1:
+        elif length < (2**16) - 1:
             b2 = 126
             encoded_bytes += struct.pack("!BH", b2, length)  # byte, short
         else:
@@ -165,7 +174,9 @@ class WebSocketServer:
         else:
             update_message = struct.pack("!L", len(message["update"]))  # long
             for key, val in message["update"]:
-                update_message += WebSocketServer.encode_bytes(key) + WebSocketServer.encode_bytes(val)
+                update_message += WebSocketServer.encode_bytes(
+                    key
+                ) + WebSocketServer.encode_bytes(val)
 
             delete_message = struct.pack("!L", len(message["delete"]))  # long
             for key in message["delete"]:
@@ -201,7 +212,12 @@ class WebSocketServer:
         masks = message[idx_first_mask:idx_first_data]
 
         # Decode data
-        decoded_bytes = bytearray([message[j] ^ masks[i % 4] for i, j in enumerate(range(idx_first_data, len(message)))])
+        decoded_bytes = bytearray(
+            [
+                message[j] ^ masks[i % 4]
+                for i, j in enumerate(range(idx_first_data, len(message)))
+            ]
+        )
         if decoded_bytes == b"\x03\xe9":
             return None
 

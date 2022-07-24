@@ -13,7 +13,6 @@ import time
 from dataclasses import dataclass
 
 import numpy as np
-
 from simulator import RobotSimulator
 
 SOLUTION = True

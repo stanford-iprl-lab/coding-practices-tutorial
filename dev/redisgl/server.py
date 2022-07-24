@@ -237,4 +237,5 @@ class WebServer:
     @staticmethod
     def parse_matrix(val):
         import numpy as np
+
         return np.array(map(float, val.split(" ")))

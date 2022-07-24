@@ -61,7 +61,6 @@ else:
 
 import dcargs
 import numpy as np
-
 from simulator import RobotSimulator
 
 
