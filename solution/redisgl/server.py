@@ -90,7 +90,7 @@ def handle_post_request(request_handler, post_vars, **kwargs):
                 val_json = json.loads(val_str[0])
 
             try:
-                types = (str, unicode)
+                types = (str, unicode)  # type: ignore
             except:
                 types = (str,)
 
@@ -236,4 +236,6 @@ class WebServer:
 
     @staticmethod
     def parse_matrix(val):
+        import numpy as np
+
         return np.array(map(float, val.split(" ")))

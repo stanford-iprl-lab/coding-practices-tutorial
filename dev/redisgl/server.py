@@ -90,7 +90,7 @@ def handle_post_request(request_handler, post_vars, **kwargs):
                 val_json = json.loads(val_str[0])
 
             try:
-                types = (str, unicode)
+                types = (str, unicode)  # type: ignore
             except:
                 types = (str,)
 
@@ -119,7 +119,9 @@ def run_http_server(http_port, ws_port, ui_requests, verbose: bool):
     }
     http_server = HTTPServer(
         ("", http_port),
-        makeHTTPRequestHandler(handle_get_request, handle_post_request, kwargs, verbose=verbose),
+        makeHTTPRequestHandler(
+            handle_get_request, handle_post_request, kwargs, verbose=verbose
+        ),
     )
     http_server.serve_forever()
 
@@ -146,7 +148,8 @@ class WebServer:
 
         # Start HTTPServer
         self.http_server_process = Process(
-            target=run_http_server, args=(http_port, ws_port, self._ui_requests, verbose)
+            target=run_http_server,
+            args=(http_port, ws_port, self._ui_requests, verbose),
         )
         self.http_server_process.start()
         if verbose:
@@ -233,4 +236,5 @@ class WebServer:
 
     @staticmethod
     def parse_matrix(val):
+        import numpy as np
         return np.array(map(float, val.split(" ")))

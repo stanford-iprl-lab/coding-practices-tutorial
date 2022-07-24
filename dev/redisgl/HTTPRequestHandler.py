@@ -91,11 +91,11 @@ def makeHTTPRequestHandler(
             content_type, parse_dict = cgi.parse_header(self.headers["Content-Type"])
             # parse_dict = {key: val.encode("utf-8") for key, val in parse_dict.items()}
             if content_type == "multipart/form-data":
-                post_vars = cgi.parse_multipart(self.rfile, parse_dict)
+                post_vars = cgi.parse_multipart(self.rfile, parse_dict)  # type: ignore
             elif content_type == "application/x-www-form-urlencoded":
                 content_length = int(self.headers["Content-Length"])
                 post_vars = parse_qs(
-                    self.rfile.read(content_length), keep_blank_values=1
+                    self.rfile.read(content_length), keep_blank_values=1  # type: ignore
                 )
             else:
                 post_vars = {}

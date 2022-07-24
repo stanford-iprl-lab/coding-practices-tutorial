@@ -9,8 +9,8 @@ import time
 import ctrlutils
 import numpy as np
 import numpy.typing as npt
-import spatialdyn as dyn
-from ctrlutils import eigen
+import spatialdyn as dyn  # type: ignore
+from ctrlutils import eigen  # type: ignore
 
 from redisgl import redisgl
 from redisgl.server import WebServer
