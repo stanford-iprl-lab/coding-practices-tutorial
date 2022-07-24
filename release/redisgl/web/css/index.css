@@ -1,0 +1,141 @@
+
+body {
+	font-family: "Roboto", sans-serif;
+	margin: 0;
+}
+
+#menu {
+	padding-top: 100px;
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	background-color: #eee;
+}
+
+#menu > div {
+	margin: auto;
+	width: 400px;
+	box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 1px 5px 0 rgba(0,0,0,0.12), 0 3px 1px -2px rgba(0,0,0,0.2);
+	background-color: white;
+}
+
+#menu .menu-header {
+	margin: 0;
+	padding: 20px 30px;
+	font-weight: bold;
+	background-color: lightcoral;
+	color: white;
+}
+
+#menu ul {
+	list-style-type: none;
+	padding: 0;
+	margin: 0;
+}
+
+#menu li {
+	padding: 20px 30px;
+}
+
+#menu a {
+	text-decoration: none;
+	color: black;
+}
+
+#menu a:hover li {
+	background-color: #eee;
+}
+
+#menu a:active li {
+	background-color: #ddd;
+}
+
+#sidebar {
+	position: fixed;
+	right: 0;
+	width: 465px;
+	height: 100%;
+	background: #eee;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+#sidebar-keys {
+	box-shadow: 0 2px 2px 0 rgba(0,0,0,0.1), 0 1px 5px 0 rgba(0,0,0,0.08), 0 3px 1px -2px rgba(0,0,0,0.16);
+	background: white;
+}
+
+#sidebar-description {
+	/* position: absolute; */
+	/* bottom: 0; */
+	padding: 30px 30px 0 30px;
+}
+
+#sidebar-description ul {
+	margin: 0;
+	padding: 0 0 0 30px;
+}
+
+#sidebar-description li {
+	padding-bottom: 0.5em;
+}
+
+#content {
+	position: fixed;
+	height: 100%;
+	background: black;
+	overflow: hidden;
+	/* margin-right: 280px; */
+}
+
+.key-header {
+	/* display: block; */
+	display: flex;
+	justify-content: space-between;
+	font-size: 14.5px;
+	background-color: lightcoral;
+	color: white;
+	padding: 0px 15px;
+	height: 40px;
+	line-height: 40px;
+	font-weight: bold;
+}
+.key-header .buttons {
+	display: flex;
+}
+.key-header input {
+	border: none;
+	line-height: 40px;
+	padding: 0px 15px;
+	margin: 0px -5px 0px 0px;
+	background-color: transparent;
+	color: white;
+	font-size: 14.5px;
+	outline: none;
+	text-transform: uppercase;
+}
+.key-header input:hover {
+	background-color: #ea454b;
+	cursor: pointer;
+}
+
+.val-body {
+	padding: 14px 0px 7px 14px;
+}
+.val-body input.val {
+	font-family: "Inconsolata", monospace;
+	font-size: 14px;
+	/* width: 42px; */
+	width: 82px;
+	border: 1px solid lightgray;
+	outline: none;
+	padding: 0px 6px;
+	line-height: 24px;
+	margin: 0px 3px 7px 0px;
+}
+.val-body input.val:focus {
+	border-bottom: 3px solid lightcoral;
+	margin-bottom: 5px;
+}

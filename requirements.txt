@@ -1,3 +1,0 @@
-ctrlutils
-numpy
-spatialdyn
