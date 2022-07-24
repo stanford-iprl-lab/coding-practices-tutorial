@@ -29,17 +29,12 @@ class PdGains:
 
 
 class RobotController:
-    def __init__(
-        self,
-        simulator: RobotSimulator,
-        pd_gains: PdGains,
-        joint_position_goal: Optional[np.ndarray] = None,
-        ee_position_goal: Optional[np.ndarray] = None,
-    ):
+    def __init__(self, simulator: RobotSimulator, pd_gains: PdGains):
         self.simulator = simulator
         self.pd_gains = pd_gains
-        self.joint_position_goal = joint_position_goal
-        self.ee_position_goal = ee_position_goal
+
+        self.joint_position_goal: Optional[np.ndarray] = None
+        self.ee_position_goal: Optional[np.ndarray] = None
         self.error: Optional[np.ndarray] = None
 
     def set_goal(
@@ -62,11 +57,14 @@ class RobotController:
             error = self.joint_position_goal - self.simulator.get_joint_positions()
             velocity = self.simulator.get_joint_velocities()
             joint_accelerations = kp * error - kd * velocity
+
             self.simulator.set_joint_accelerations(joint_accelerations)
+
         elif self.ee_position_goal is not None:
             error = self.ee_position_goal - self.simulator.get_ee_position()
             velocity = self.simulator.get_ee_velocity()
             ee_acceleration = kp * error - kd * velocity
+
             self.simulator.set_ee_acceleration(ee_acceleration)
 
         self.error = error
