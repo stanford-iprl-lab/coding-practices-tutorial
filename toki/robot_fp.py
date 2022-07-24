@@ -70,11 +70,7 @@ class EePositionGoal(Goal):
 
 
 class RobotController:
-    def __init__(
-        self,
-        simulator: RobotSimulator,
-        pd_gains: PdGains,
-    ):
+    def __init__(self, simulator: RobotSimulator, pd_gains: PdGains):
         self.simulator = simulator
         self.pd_gains = pd_gains
 
@@ -108,11 +104,9 @@ class RobotController:
 
 
 def run_controller(
-    simulator: RobotSimulator,
-    controller: RobotController,
-    goal: Goal,
+    simulator: RobotSimulator, controller: RobotController, goal: Goal
 ) -> None:
-    # Run our controller, recording the joint state at each step.
+    """Runs the controller until it reaches the goal."""
     while not controller.is_done(goal):
         # Compute torque output and step.
         controller.update_control(goal)
@@ -121,11 +115,15 @@ def run_controller(
     print(f"Goal error: {goal.error}")
 
 
-def main(
-    server: WebServer,
-    simulator: RobotSimulator,
-    pd_gains: PdGains,
-) -> None:
+def main(server: WebServer, simulator: RobotSimulator) -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--kp", type=float, help="P gain.", default=49.0)
+    parser.add_argument("--kd", type=float, help="D gain.", default=14.0)
+    args = parser.parse_args()
+
+    # Get control gains from argument parser.
+    pd_gains = PdGains(kp=args.kp, kd=args.kd)
+
     # Initialize controller.
     controller = RobotController(simulator, pd_gains=pd_gains)
 
@@ -145,20 +143,12 @@ def main(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--kp", type=float, help="P gain.", default=49.0)
-    parser.add_argument("--kd", type=float, help="D gain.", default=14.0)
-    args = parser.parse_args()
-
-    # Get control gains from argument parser.
-    pd_gains = PdGains(kp=args.kp, kd=args.kd)
-
     # Initialize the web server and simulator.
     server = WebServer()
     simulator = RobotSimulator(server)
     simulator.add_object("box", position=np.array([-0.45, -0.45, 0.05]))
 
     # Run main program when web page is loaded.
-    server.on_ready(main, args=(server, simulator, pd_gains))
+    server.on_ready(main, args=(server, simulator))
     server.connect(http_port=8000, ws_port=8001)
     server.wait()

@@ -59,15 +59,17 @@ class RobotController:
         kd = self.pd_gains.kd
 
         if self.joint_position_goal is not None:
-            self.error = self.joint_position_goal - self.simulator.get_joint_positions()
+            error = self.joint_position_goal - self.simulator.get_joint_positions()
             velocity = self.simulator.get_joint_velocities()
-            joint_accelerations = kp * self.error - kd * velocity
+            joint_accelerations = kp * error - kd * velocity
             self.simulator.set_joint_accelerations(joint_accelerations)
         elif self.ee_position_goal is not None:
-            self.error = self.ee_position_goal - self.simulator.get_ee_position()
+            error = self.ee_position_goal - self.simulator.get_ee_position()
             velocity = self.simulator.get_ee_velocity()
-            ee_acceleration = kp * self.error - kd * velocity
+            ee_acceleration = kp * error - kd * velocity
             self.simulator.set_ee_acceleration(ee_acceleration)
+
+        self.error = error
 
     def is_done(self) -> bool:
         """Returns True if the goal is reached."""
@@ -78,11 +80,8 @@ class RobotController:
         return bool(error_norm < 1e-3)
 
 
-def run_controller(
-    simulator: RobotSimulator,
-    controller: RobotController,
-) -> None:
-    # Run our controller, recording the joint state at each step.
+def run_controller(simulator: RobotSimulator, controller: RobotController) -> None:
+    """Runs the controller until it reaches the goal."""
     while not controller.is_done():
         # Compute torque output and step.
         controller.update_control()
@@ -91,11 +90,15 @@ def run_controller(
     print(f"Goal error: {controller.error}")
 
 
-def main(
-    server: WebServer,
-    simulator: RobotSimulator,
-    pd_gains: PdGains,
-) -> None:
+def main(server: WebServer, simulator: RobotSimulator) -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--kp", type=float, help="P gain.", default=49.0)
+    parser.add_argument("--kd", type=float, help="D gain.", default=14.0)
+    args = parser.parse_args()
+
+    # Get control gains from argument parser.
+    pd_gains = PdGains(kp=args.kp, kd=args.kd)
+
     # Initialize controller.
     controller = RobotController(simulator, pd_gains=pd_gains)
 
@@ -115,20 +118,12 @@ def main(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--kp", type=float, help="P gain.", default=49.0)
-    parser.add_argument("--kd", type=float, help="D gain.", default=14.0)
-    args = parser.parse_args()
-
-    # Get control gains from argument parser.
-    pd_gains = PdGains(kp=args.kp, kd=args.kd)
-
     # Initialize the web server and simulator.
     server = WebServer()
     simulator = RobotSimulator(server)
     simulator.add_object("box", position=np.array([-0.45, -0.45, 0.05]))
 
     # Run main program when web page is loaded.
-    server.on_ready(main, args=(server, simulator, pd_gains))
+    server.on_ready(main, args=(server, simulator))
     server.connect(http_port=8000, ws_port=8001)
     server.wait()
