@@ -9,8 +9,6 @@ This code contains several minor bugs. Can you spot them?
 """
 
 import argparse
-import time
-from dataclasses import dataclass
 
 import numpy as np
 from simulator import RobotSimulator
