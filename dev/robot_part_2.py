@@ -27,12 +27,8 @@ if SOLUTION:
         Solution:
 
         Let typing enforce this logic. We can can remove the need for individual
-        checks with one `self.goal: Union[JointPositionGoal, PoseGoal]` variable.
-        This could be implemented as a literal union or a Goal base class with two
-        subclasses.
-
-        Note from Brent: splitting this into two classes also makes sense to me?
-        Possibly more sense.
+        checks with one `self.goal: Union[JointPositionGoal, EePositionGoal]`
+        variable.
 
     (2) Pure functions
 
@@ -43,14 +39,7 @@ if SOLUTION:
 
         Side effects like this can be tricky to catch/keep track of. One extreme is
         to make functions as pure as possible, e.g., having the user hold the
-        mutable state. An easier solution might be to consolidate side effects. In
-        this case, since prev_error is associated with the goal, it makes sense to
-        group them into one object.
-
-        -> Brent: introducing the error as a mutable attribute of the goal seems like a
-        weird thing to recommend, so I modified `update_control()` to just return the
-        error instead.
-
+        mutable state.
     """
 from dataclasses import dataclass
 
@@ -122,8 +111,8 @@ class RobotController:
 
         def run(self):
             """Runs the controller until it reaches the goal."""
-            error = np.inf
-            while error > 1e-3:
+            error = None
+            while not self.is_done(error):
                 # Compute torque output and step.
                 error = self.update_control()
                 self.simulator.step()
@@ -136,7 +125,7 @@ class RobotController:
 
         def run(self):
             """Runs the controller until it reaches the goal."""
-            while self.is_done() is False:
+            while not self.is_done():
                 # Compute torque output and step.
                 self.update_control()
                 self.simulator.step()
@@ -171,6 +160,14 @@ class RobotController:
                 raise ValueError("Unrecognized goal type.")
 
             return float(np.linalg.norm(error))
+
+        def is_done(self, error: Optional[np.ndarray]) -> bool:
+            """Returns True if the goal is reached."""
+            if error is None:
+                return False
+
+            error_norm = np.linalg.norm(error)
+            return bool(error_norm < 1e-3)
 
     else:
 

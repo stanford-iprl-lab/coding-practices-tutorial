@@ -52,7 +52,7 @@ class RobotController:
 
     def run(self):
         """Runs the controller until it reaches the goal."""
-        while self.is_done() is False:
+        while not self.is_done():
             # Compute torque output and step.
             self.update_control()
             self.simulator.step()
